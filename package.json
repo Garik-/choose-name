@@ -1,0 +1,19 @@
+{
+  "name": "choose-name",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "predeploy": "vite build",
+    "deploy": "rsync -avz --delete dist/ xakep@raspberrypi.local:/usr/share/nginx/www/choose-name"
+  },
+  "volta": {
+    "node": "25.2.1"
+  },
+  "devDependencies": {
+    "vite": "^7.2.4",
+    "vite-plugin-simple-html": "^1.1.0",
+    "vite-plugin-singlefile": "^2.3.0"
+  }
+}
