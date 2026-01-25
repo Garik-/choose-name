@@ -1,4 +1,4 @@
-import originalNames from './names.json' with { type: 'json' };
+import originalNames from './names_wiki.json' with { type: 'json' };
 
 const State = Object.freeze({
     LIKE: 'like',
