@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "predeploy": "vite build",
+    "predeploy": "vite build --base=/choose-name/",
     "deploy": "rsync -avz --delete dist/ xakep@raspberrypi.local:/usr/share/nginx/www/choose-name"
   },
   "volta": {

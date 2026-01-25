@@ -40,23 +40,23 @@
 </head>
 
 <body class="dark">
-    <header class="absolute top left right white-text top-shadow front">
+    <div class="fixed top right bottom left back no-events">
+        <img class="responsive page active bottom" src="src/background.svg">
+    </div>
+    <header class="absolute top left right white-text front">
         <nav>
-            <div class="max">
-            </div>
+            <div class="max"></div>
+            <button class="circle transparent" id="restart"><i>restart_alt</i></button>
             <button class="circle transparent" id="export"><i>download</i></button>
         </nav>
     </header>
     <main class="middle-align center-align">
-
         <article id="card" class="c">
-
             <h1 id="name"></h1>
             <p class="secondary-text" id="progress"></p>
-
         </article>
-
     </main>
+    <div id="toast" class="snackbar"></div>
 </body>
 
 </html>

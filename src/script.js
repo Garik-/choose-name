@@ -1,12 +1,19 @@
-import names from './names.json' with { type: 'json' };
+import originalNames from './names.json' with { type: 'json' };
 
-let currentIndex = 0;
+const State = Object.freeze({
+    LIKE: 'like',
+    DISLIKE: 'dislike'
+});
+
+let names = JSON.parse(localStorage.getItem('names')) || shuffle([...originalNames]);
+let currentIndex = parseInt(localStorage.getItem('currentIndex')) || 0;
 let state;
 
-const card = document.getElementById('card');
+const cardEl = document.getElementById('card');
 const nameEl = document.getElementById('name');
 const progressEl = document.getElementById('progress');
-const toast = document.getElementById('toast');
+const toastEl = document.getElementById('toast');
+
 
 let startX = 0;
 let currentX = 0;
@@ -20,18 +27,26 @@ function shuffle(array) {
     return array;
 }
 
-shuffle(names);
+function saveState() {
+    localStorage.setItem('names', JSON.stringify(names));
+    localStorage.setItem('currentIndex', currentIndex.toString());
+}
 
 
-function ui(text) {
-    toast.textContent = text;
-    toast.classList.add('active');
+function toast(text, timeout = 3000) {
+    toastEl.textContent = text;
+    toastEl.classList.add('active');
         setTimeout(() => {
-            toast.classList.remove('active');
-    }, 3000);
+            toastEl.classList.remove('active');
+    }, timeout);
 }
 
 function updateCard() {
+    if (names.length === 0) {
+        nameEl.textContent = 'No more names';
+        progressEl.textContent = '0 / 0';
+        return;
+    }
     nameEl.textContent = names[currentIndex];
     progressEl.textContent = `${currentIndex + 1} / ${names.length}`;
 }
@@ -39,59 +54,65 @@ function updateCard() {
 function nextCard() {
     console.log(currentIndex, names[currentIndex], state);
 
-    if (state == 'dislike') {
+    if (state === State.DISLIKE) {
         names.splice(currentIndex, 1);
+        // do not increment currentIndex, as the next element is now at currentIndex
+    } else {
+        currentIndex++;
     }
- 
-    currentIndex++;
+
     if (currentIndex >= names.length) {
-        currentIndex = 0; // loop or handle end
+        currentIndex = 0; // loop back
+        if (names.length > 0) {
+            shuffle(names);
+        }
     }
+    saveState();
     updateCard();
-    card.style.transform = 'translateX(0) rotate(0deg)';
-    card.classList.remove('like', 'dislike');
+    cardEl.style.transform = 'translateX(0) rotate(0deg)';
+    cardEl.classList.remove('like', 'dislike');
 }
 
-card.addEventListener('touchstart', (e) => {
+cardEl.addEventListener('touchstart', (e) => {
     startX = e.touches[0].clientX;
     isDragging = true;
-    card.classList.add('swiping');
+    cardEl.classList.add('swiping');
 });
 
-card.addEventListener('touchmove', (e) => {
+cardEl.addEventListener('touchmove', (e) => {
     if (!isDragging) return;
     currentX = e.touches[0].clientX;
     const deltaX = currentX - startX;
     const rotate = deltaX * 0.1;
-    card.style.transform = `translateX(${deltaX}px) rotate(${rotate}deg)`;
+    cardEl.style.transform = `translateX(${deltaX}px) rotate(${rotate}deg)`;
 });
 
-card.addEventListener('touchend', () => {
+cardEl.addEventListener('touchend', () => {
     if (!isDragging) return;
     isDragging = false;
-    card.classList.remove('swiping');
+    cardEl.classList.remove('swiping');
     const deltaX = currentX - startX;
     if (deltaX > 100) {
         // swipe right - like
-        card.classList.add('like');
-        state = 'like';
+        cardEl.classList.add('like');
+        state = State.LIKE;
         setTimeout(nextCard, 300);
     } else if (deltaX < -100) {
         // swipe left - dislike
-        card.classList.add('dislike');
-        state = 'dislike';
+        cardEl.classList.add('dislike');
+        state = State.DISLIKE;
         setTimeout(nextCard, 300);
     } else {
         // back to center
-        card.style.transform = 'translateX(0) rotate(0deg)';
+        cardEl.style.transform = 'translateX(0) rotate(0deg)';
     }
 });
 
 // For mouse (desktop testing)
-card.addEventListener('mousedown', (e) => {
+cardEl.addEventListener('mousedown', (e) => {
     startX = e.clientX;
     isDragging = true;
-    card.classList.add('swiping');
+    cardEl.classList.add('swiping');
 });
 
 document.addEventListener('mousemove', (e) => {
@@ -99,24 +120,24 @@ document.addEventListener('mousemove', (e) => {
     currentX = e.clientX;
     const deltaX = currentX - startX;
     const rotate = deltaX * 0.1;
-    card.style.transform = `translateX(${deltaX}px) rotate(${rotate}deg)`;
+    cardEl.style.transform = `translateX(${deltaX}px) rotate(${rotate}deg)`;
 });
 
 document.addEventListener('mouseup', () => {
     if (!isDragging) return;
     isDragging = false;
-    card.classList.remove('swiping');
+    cardEl.classList.remove('swiping');
     const deltaX = currentX - startX;
     if (deltaX > 100) {
-        card.classList.add('like');
-        state = 'like';
+        cardEl.classList.add('like');
+        state = State.LIKE;
         setTimeout(nextCard, 300);
     } else if (deltaX < -100) {
-        card.classList.add('dislike');
-        state = 'dislike';
+        cardEl.classList.add('dislike');
+        state = State.DISLIKE;
         setTimeout(nextCard, 300);
     } else {
-        card.style.transform = 'translateX(0) rotate(0deg)';
+        cardEl.style.transform = 'translateX(0) rotate(0deg)';
     }
 });
 
@@ -124,13 +145,18 @@ const exportBtn = document.getElementById('export');
 exportBtn.addEventListener('click', async () => {
     try {
         await navigator.clipboard.writeText(JSON.stringify(names));
-        ui('Имена скопированы в буфер обмена');
+        toast('Имена скопированы в буфер обмена');
     } catch (err) {
         console.error('Failed to copy: ', err);
-        ui('Failed to copy to clipboard');
+        toast('Failed to copy to clipboard');
     }
 });
 
-
+const restartBtn = document.getElementById('restart');
+restartBtn.addEventListener('click', () => {
+    localStorage.removeItem('names');
+    localStorage.removeItem('currentIndex');
+    location.reload();
+});
 
 updateCard();
