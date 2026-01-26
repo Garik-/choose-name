@@ -116,10 +116,9 @@ cardEl.addEventListener('touchstart', handleStart);
 cardEl.addEventListener('touchmove', handleMove);
 cardEl.addEventListener('touchend', handleEnd);
 
-// For mouse (desktop testing)
 cardEl.addEventListener('mousedown', handleStart);
-cardEl.addEventListener('mousemove', handleMove);
-cardEl.addEventListener('mouseup', handleEnd);
+document.addEventListener('mousemove', handleMove);
+document.addEventListener('mouseup', handleEnd);
 
 const exportBtn = document.getElementById('export');
 exportBtn.addEventListener('click', async () => {
