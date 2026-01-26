@@ -19,6 +19,45 @@ let startX = 0;
 let currentX = 0;
 let isDragging = false;
 
+function getClientX(e) {
+    return e.touches ? e.touches[0].clientX : e.clientX;
+}
+
+function handleMove(e) {
+    if (!isDragging) return;
+    currentX = getClientX(e);
+    const deltaX = currentX - startX;
+    const rotate = deltaX * 0.1;
+    cardEl.style.transform = `translateX(${deltaX}px) rotate(${rotate}deg)`;
+}
+
+function handleStart(e) {
+    startX = getClientX(e);
+    isDragging = true;
+    cardEl.classList.add('swiping');
+}
+
+function handleEnd() {
+    if (!isDragging) return;
+    isDragging = false;
+    cardEl.classList.remove('swiping');
+    const deltaX = currentX - startX;
+    if (deltaX > 100) {
+        // swipe right - like
+        cardEl.classList.add('like');
+        state = State.LIKE;
+        setTimeout(nextCard, 300);
+    } else if (deltaX < -100) {
+        // swipe left - dislike
+        cardEl.classList.add('dislike');
+        state = State.DISLIKE;
+        setTimeout(nextCard, 300);
+    } else {
+        // back to center
+        cardEl.style.transform = 'translateX(0) rotate(0deg)';
+    }
+}
+
 function shuffle(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -73,73 +112,14 @@ function nextCard() {
     cardEl.classList.remove('like', 'dislike');
 }
 
-cardEl.addEventListener('touchstart', (e) => {
-    startX = e.touches[0].clientX;
-    isDragging = true;
-    cardEl.classList.add('swiping');
-});
-
-cardEl.addEventListener('touchmove', (e) => {
-    if (!isDragging) return;
-    currentX = e.touches[0].clientX;
-    const deltaX = currentX - startX;
-    const rotate = deltaX * 0.1;
-    cardEl.style.transform = `translateX(${deltaX}px) rotate(${rotate}deg)`;
-});
-
-cardEl.addEventListener('touchend', () => {
-    if (!isDragging) return;
-    isDragging = false;
-    cardEl.classList.remove('swiping');
-    const deltaX = currentX - startX;
-    if (deltaX > 100) {
-        // swipe right - like
-        cardEl.classList.add('like');
-        state = State.LIKE;
-        setTimeout(nextCard, 300);
-    } else if (deltaX < -100) {
-        // swipe left - dislike
-        cardEl.classList.add('dislike');
-        state = State.DISLIKE;
-        setTimeout(nextCard, 300);
-    } else {
-        // back to center
-        cardEl.style.transform = 'translateX(0) rotate(0deg)';
-    }
-});
+cardEl.addEventListener('touchstart', handleStart);
+cardEl.addEventListener('touchmove', handleMove);
+cardEl.addEventListener('touchend', handleEnd);
 
 // For mouse (desktop testing)
-cardEl.addEventListener('mousedown', (e) => {
-    startX = e.clientX;
-    isDragging = true;
-    cardEl.classList.add('swiping');
-});
-
-document.addEventListener('mousemove', (e) => {
-    if (!isDragging) return;
-    currentX = e.clientX;
-    const deltaX = currentX - startX;
-    const rotate = deltaX * 0.1;
-    cardEl.style.transform = `translateX(${deltaX}px) rotate(${rotate}deg)`;
-});
-
-document.addEventListener('mouseup', () => {
-    if (!isDragging) return;
-    isDragging = false;
-    cardEl.classList.remove('swiping');
-    const deltaX = currentX - startX;
-    if (deltaX > 100) {
-        cardEl.classList.add('like');
-        state = State.LIKE;
-        setTimeout(nextCard, 300);
-    } else if (deltaX < -100) {
-        cardEl.classList.add('dislike');
-        state = State.DISLIKE;
-        setTimeout(nextCard, 300);
-    } else {
-        cardEl.style.transform = 'translateX(0) rotate(0deg)';
-    }
-});
+cardEl.addEventListener('mousedown', handleStart);
+document.addEventListener('mousemove', handleMove);
+document.addEventListener('mouseup', handleEnd);
 
 const exportBtn = document.getElementById('export');
 exportBtn.addEventListener('click', async () => {
